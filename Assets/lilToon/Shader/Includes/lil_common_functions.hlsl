@@ -594,7 +594,9 @@ void lilPOM(inout float2 uvMain, inout float2 uv, lilBool useParallax, float4 uv
         rayStep = rayStep / LIL_POM_DETAIL;
         rayStep.z /= parallaxScale;
 
-        for(int i = 0; i < LIL_POM_DETAIL * 2 * parallaxScale; ++i)
+        // fork: cap the POM loop at 64. Uncapped, this loop hangs the GPU (TDR) on RTX 5090 / driver 616.92 in the back pass of
+        // two-pass transparent shaders when the URP SRP Batcher is on, even when POM is never executed. See FORK_NOTES.md
+        for(int i = 0; i < min(LIL_POM_DETAIL * 2 * parallaxScale, 64); ++i)
         {
             height2 = height;
             rayPos += rayStep;
